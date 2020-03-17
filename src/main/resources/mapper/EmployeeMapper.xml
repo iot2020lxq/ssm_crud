@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.iot.crud.dao.EmployeeMapper">
+	<!-- 不带部门属性 -->
+	<sql id="Base_Column_List">
+		emp_id, emp_name, gender, email, d_id
+	</sql>
+
+	<!-- 带部门的属性-->
+	<sql id="ContainDept_Column_List">
+		emp_id, emp_name, gender, email, d_id, dept_id, dept_name
+	</sql>
+	
+	<!-- 不带部门的映射 -->
+	<resultMap id="BaseResultMap" type="cn.iot.crud.bean.Employee">
+		<id column="emp_id" jdbcType="INTEGER" property="empId" />
+		<result column="emp_name" jdbcType="VARCHAR" property="empName" />
+		<result column="gender" jdbcType="CHAR" property="gender" />
+		<result column="email" jdbcType="VARCHAR" property="email" />
+		<result column="d_id" jdbcType="INTEGER" property="dId" />
+	</resultMap>
+
+	<!-- 带部门的映射 -->
+	<resultMap id="ContainDeptResultMap" type="cn.iot.crud.bean.Employee">
+		<id column="emp_id" jdbcType="INTEGER" property="empId" />
+		<result column="emp_name" jdbcType="VARCHAR" property="empName" />
+		<result column="gender" jdbcType="CHAR" property="gender" />
+		<result column="email" jdbcType="VARCHAR" property="email" />
+		<result column="d_id" jdbcType="INTEGER" property="dId" />
+
+		<association property="department" javaType="cn.iot.crud.bean.Department">
+			<id column="dept_id" property="deptId" />
+			<result column="dept_name" property="deptName" />
+		</association>
+	</resultMap>
+
+	<!-- 删除 -->
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete from tbl_emp
+		where emp_id = #{empId,jdbcType=INTEGER}
+	</delete>
+	<!-- 删除增强版，多个删除 -->
+	<delete id="deleteBatchById">
+		delete from tbl_emp where
+		<foreach collection="ids" item="id" open="emp_id in ("  close=")" separator=",">
+			#{id}
+		</foreach>
+	</delete>
+	
+	<!-- 插入 -->
+	<insert id="insert" parameterType="cn.iot.crud.bean.Employee">
+		insert into tbl_emp (emp_id, emp_name, gender,
+		email, d_id)
+		values (#{empId,jdbcType=INTEGER}, #{empName,jdbcType=VARCHAR},
+		#{gender,jdbcType=CHAR},
+		#{email,jdbcType=VARCHAR}, #{dId,jdbcType=INTEGER})
+	</insert>
+	<!-- 更新 -->
+	<update id="updateByPrimaryKey" parameterType="cn.iot.crud.bean.Employee" >
+		update tbl_emp
+		<set>
+			<if test="empName != null">
+				emp_name = #{empName},
+			</if>
+			<if test="gender != null">
+				gender = #{gender},
+			</if>
+			<if test="email != null">
+				email = #{email},
+			</if>
+			<if test="dId != null">
+				d_id = #{dId},
+			</if>
+		</set>
+		where emp_id = #{empId}
+	</update>
+	<!-- 不带部门，根据id查询 -->
+	<select id="selectByPrimaryKey" parameterType="java.lang.Integer"
+		resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from tbl_emp
+		where emp_id = #{empId,jdbcType=INTEGER}
+	</select>
+	<!-- 不带部分，查询所有 -->
+	<select id="selectAll" resultMap="BaseResultMap" >
+		select
+		<include refid="Base_Column_List" />
+		from tbl_emp
+	</select>
+	<!-- 根据用户名查询，不带部门 -->
+	<select id="selectByEmpName" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from tbl_emp
+		where emp_name = #{empName,jdbcType=VARCHAR}
+	</select>
+	
+	<!-- 带部门，根据id查询 -->
+	<select id="selectByPrimaryKeyContainDept" parameterType="java.lang.Integer"
+		resultMap="ContainDeptResultMap">
+		SELECT <include refid="ContainDept_Column_List" />
+		FROM tbl_emp
+		LEFT JOIN tbl_dept
+		ON tbl_emp.d_id=tbl_dept.dept_id
+		where emp_id = #{empId,jdbcType=INTEGER}
+	</select>
+	<!-- 带部门，查询所有 -->
+	<select id="selectAllContainDept" resultMap="ContainDeptResultMap">
+		SELECT <include refid="ContainDept_Column_List" />
+		FROM tbl_emp
+		LEFT JOIN tbl_dept
+		ON tbl_emp.d_id=tbl_dept.dept_id
+	</select>
+</mapper>
